@@ -1,0 +1,19 @@
+{
+  "name": "sql-quest",
+  "version": "1.0.0",
+  "description": "Jeu pour apprendre le SQL (MySQL / PostgreSQL), façon Flexbox Froggy",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "seed": "node server/seed.js",
+    "check": "node server/check.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mysql2": "^3.11.5",
+    "pg": "^8.13.1"
+  }
+}

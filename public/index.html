@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SQL QUEST</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%2334D399'/><stop offset='1' stop-color='%233B82F6'/></linearGradient></defs><rect width='32' height='32' rx='8' fill='url(%23g)'/><text x='16' y='22' font-size='18' text-anchor='middle' font-family='sans-serif' font-weight='700' fill='%230B1220'>%23</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    // Thème appliqué avant le rendu pour éviter un flash
+    try {
+      const s = JSON.parse(localStorage.getItem('sqlquest') || '{}');
+      const t = s.theme || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      document.documentElement.dataset.theme = t;
+    } catch {}
+  </script>
+</head>
+<body data-mode="jeu" data-sgbd="mysql">
+  <header class="topbar">
+    <button class="icon-btn mobile-only" id="menu-btn" aria-label="Ouvrir la liste des tables">☰</button>
+    <div class="logo">
+      <span class="logo-mark">#</span>
+      <span class="logo-text">SQL QUEST</span>
+    </div>
+    <div class="controls">
+      <span class="label desktop-only">SGBD</span>
+      <div class="segmented sgbd-toggle desktop-only" role="tablist" aria-label="Moteur SQL">
+        <button data-sgbd="mysql">MySQL</button>
+        <button data-sgbd="postgres">PostgreSQL</button>
+      </div>
+      <label class="engine-select mobile-only">
+        <span class="dot"></span>
+        <select id="sgbd-select" aria-label="Moteur SQL">
+          <option value="mysql">MySQL</option>
+          <option value="postgres">PostgreSQL</option>
+        </select>
+      </label>
+      <div class="segmented mode-toggle desktop-only" aria-label="Mode">
+        <button data-mode="sandbox">🧪 Bac à sable</button>
+        <button data-mode="jeu">🎯 Jeu</button>
+      </div>
+      <button class="icon-btn theme-btn desktop-only" id="theme-btn" aria-label="Changer de thème"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="drawer-head mobile-only">
+        <strong>Base de données</strong>
+        <button class="icon-btn small" id="drawer-close" aria-label="Fermer">✕</button>
+      </div>
+      <label class="section-label desktop-only" for="base-select">Base de données</label>
+      <div class="select-wrap">
+        <span class="select-icon" id="base-icon">⚽</span>
+        <select id="base-select"></select>
+        <span class="caret">▾</span>
+      </div>
+      <div class="section-label tables-label"><span>Tables</span><span id="tables-count"></span></div>
+      <div class="tables" id="tables"></div>
+      <div class="spacer"></div>
+      <div class="segmented theme-toggle mobile-only">
+        <button data-theme-choice="dark">🌙 Sombre</button>
+        <button data-theme-choice="light">☀️ Clair</button>
+      </div>
+    </aside>
+    <div class="backdrop" id="backdrop"></div>
+
+    <main class="main">
+      <div class="segmented mode-toggle mobile-only full" aria-label="Mode">
+        <button data-mode="sandbox">🧪 Bac à sable</button>
+        <button data-mode="jeu">🎯 Jeu</button>
+      </div>
+      <button class="base-button mobile-only" id="base-button">
+        <span id="base-button-icon">⚽</span>
+        <span class="grow" id="base-button-name">Coupe du monde</span>
+        <span class="muted" id="base-button-meta"></span>
+      </button>
+
+      <!-- Mode jeu -->
+      <section class="level-bar game-only">
+        <div class="level-nav">
+          <button class="icon-btn" id="prev-level" aria-label="Niveau précédent">◀</button>
+          <div class="level-label">
+            <strong id="level-title">Niveau 1 / 1</strong>
+            <span class="mobile-only muted small" id="level-done"></span>
+          </div>
+          <button class="icon-btn" id="next-level" aria-label="Niveau suivant">▶</button>
+        </div>
+        <div class="level-dots desktop-only" id="level-dots"></div>
+        <div class="progress mobile-only"><div class="progress-fill" id="progress-fill"></div></div>
+      </section>
+
+      <section class="card question game-only">
+        <div class="tags" id="q-tags"></div>
+        <h1 id="q-title"></h1>
+        <p id="q-text"></p>
+        <button class="hint" id="hint-btn">💡 <span id="hint-text">Afficher l’indice</span></button>
+      </section>
+
+      <!-- Mode bac à sable -->
+      <section class="sandbox-header sandbox-only">
+        <div>
+          <h1>🧪 Bac à sable</h1>
+          <p class="muted">Explorez librement la base <span id="sandbox-base-name"></span> — aucune question, aucun score.</p>
+        </div>
+        <div class="examples"><span class="muted small desktop-only">Exemples :</span><div id="examples"></div></div>
+      </section>
+
+      <div class="workspace">
+        <div class="editor" id="editor">
+          <div class="editor-tabbar">
+            <span class="mono muted small">requete.sql</span>
+            <span class="engine-badge"><i></i><span id="engine-label">MySQL 8.4</span></span>
+          </div>
+          <div class="code-area">
+            <div class="gutter mono" id="gutter" aria-hidden="true"></div>
+            <div class="code-wrap">
+              <pre class="highlight mono" aria-hidden="true"><code id="highlight"></code></pre>
+              <textarea id="sql" class="mono" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-label="Requête SQL" placeholder="Écrivez votre requête SQL ici…"></textarea>
+            </div>
+          </div>
+          <div class="editor-footer">
+            <span class="muted small desktop-only">Ctrl + Entrée pour exécuter</span>
+            <div class="buttons">
+              <button class="btn ghost" id="clear-btn">Effacer</button>
+              <button class="btn primary" id="run-btn">▶&nbsp; Exécuter</button>
+            </div>
+          </div>
+        </div>
+
+        <details class="card side-panel expected game-only" id="expected" open>
+          <summary><span>🎯 Résultat attendu</span><span class="muted small" id="expected-meta"></span></summary>
+          <div class="table-wrap compact" id="expected-table"></div>
+        </details>
+
+        <details class="card side-panel history sandbox-only" id="history" open>
+          <summary><span>🕘 Historique</span><button class="link small" id="history-clear">Tout effacer</button></summary>
+          <ul class="history-list" id="history-list"></ul>
+        </details>
+      </div>
+
+      <section class="card result" id="result">
+        <div class="banner" id="banner" hidden></div>
+        <div class="result-head">
+          <strong id="result-title">Résultat</strong>
+          <span class="small" id="result-meta"></span>
+        </div>
+        <div id="result-body"><p class="muted empty">Exécutez une requête pour voir le résultat ici.</p></div>
+      </section>
+    </main>
+  </div>
+
+  <canvas id="confetti" aria-hidden="true"></canvas>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
