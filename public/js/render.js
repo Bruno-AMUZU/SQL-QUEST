@@ -77,11 +77,12 @@ export function carteTable(table, { ouverte, onToggle, onApercu }) {
 export function banniere(banner, { ok, titre, sousTitre, bouton }) {
   banner.hidden = false;
   banner.className = `banner${ok ? '' : ' fail'}`;
-  banner.replaceChildren(
+  // replaceChildren() convertirait null en texte « null » : on filtre
+  banner.replaceChildren(...[
     el('span', { class: 'emoji', text: ok ? '🎉' : '💥' }),
     el('div', { class: 'texts' }, el('strong', { text: titre }), el('span', { class: 'sub', text: sousTitre })),
     bouton ? el('button', { class: `btn ${ok ? 'primary' : 'outline-red'}`, onclick: bouton.action, text: bouton.label }) : null,
-  );
+  ].filter(Boolean));
 }
 
 // --- Erreurs : message natif + astuce en français ----------------------------

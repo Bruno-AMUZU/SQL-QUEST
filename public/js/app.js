@@ -276,7 +276,7 @@ async function executerNiveau(sql) {
     banniere(banner, {
       ok: false,
       titre: 'Oups, la requête a échoué',
-      sousTitre: 'Corrigez l’erreur ci-dessous puis réessayez.',
+      sousTitre: r.erreur.message ?? String(r.erreur),
     });
     echec($('#editor'), zone);
     return;
