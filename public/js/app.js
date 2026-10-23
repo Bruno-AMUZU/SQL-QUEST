@@ -371,6 +371,14 @@ function brancher() {
   $('#drawer-close').addEventListener('click', fermerTiroir);
   $('#backdrop').addEventListener('click', fermerTiroir);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fermerTiroir(); });
+  // Flèches gauche/droite : niveau précédent/suivant (sauf pendant la saisie)
+  document.addEventListener('keydown', (e) => {
+    if (etat.mode !== 'jeu' || !etat.niveaux.length) return;
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (e.target.closest('input, textarea, select, [contenteditable]')) return;
+    if (e.key === 'ArrowLeft' && etat.niveau > 0) allerAuNiveau(etat.niveau - 1);
+    else if (e.key === 'ArrowRight' && etat.niveau < etat.niveaux.length - 1) allerAuNiveau(etat.niveau + 1);
+  });
 
   $('#history-clear').addEventListener('click', (e) => {
     e.preventDefault();
