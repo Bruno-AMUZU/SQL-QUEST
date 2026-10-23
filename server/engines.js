@@ -6,6 +6,9 @@ import config from './config.js';
 
 // Les nombres peuvent arriver en texte (BIGINT/NUMERIC côté pg, DECIMAL côté mysql2) :
 // validate.js s'occupe de la normalisation.
+// Les DATE restent en texte 'AAAA-MM-JJ' comme avec mysql2 (dateStrings), sans décalage de fuseau.
+pg.types.setTypeParser(pg.types.builtins.DATE, (v) => v);
+
 const mysqlPools = new Map();
 const pgPools = new Map();
 
